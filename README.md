@@ -1,4 +1,4 @@
-# Epscrap — Veille offres dev Europe
+# Epscrap - Veille offres dev Europe
 
 Dashboard de veille des offres d'emploi développeur en Europe, avec focus **alternance France**.
 
@@ -53,7 +53,7 @@ cd veille_tech_project_epsi
 ### 2. Base de données
 
 ```bash
-# Windows — adapter le chemin si nécessaire
+# Windows - adapter le chemin si nécessaire
 "C:\Program Files\PostgreSQL\18\bin\psql" -U postgres -c "CREATE DATABASE jobsdb;"
 "C:\Program Files\PostgreSQL\18\bin\psql" -U postgres -d jobsdb -f backend/schema.sql
 ```
@@ -88,12 +88,12 @@ Fichier `backend/.env` (non versionné) :
 DATABASE_URL=postgres://postgres:PASSWORD@localhost:5432/jobsdb
 PORT=3001
 
-# France Travail — inscription gratuite sur https://francetravail.io/data/api/offres-emploi
+# France Travail - inscription gratuite sur https://francetravail.io/data/api/offres-emploi
 # Scopes nécessaires : api_offresdemploiv2 o2dsoffre
 FRANCE_TRAVAIL_CLIENT_ID=
 FRANCE_TRAVAIL_CLIENT_SECRET=
 
-# Adzuna — inscription gratuite sur https://developer.adzuna.com
+# Adzuna - inscription gratuite sur https://developer.adzuna.com
 # Créer un compte > "Create App" > copier App ID et App Key
 ADZUNA_APP_ID=
 ADZUNA_APP_KEY=
