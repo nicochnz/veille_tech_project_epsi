@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: 'Syne', 'Arial Black', sans-serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --c-dark: #222222;
+  --c-primary: #1c5d99;
+  --c-secondary: #639fab;
+  --c-light: #bbcde5;
+  --c-bg: #f0f5f9;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--c-bg);
+  color: var(--c-dark);
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-display { font-family: var(--font-display); }
+
