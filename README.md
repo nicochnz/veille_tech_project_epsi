@@ -12,7 +12,7 @@ Pipeline : APIs publiques → normalisation → PostgreSQL → API REST → Dash
 |--------|-------------|
 | Backend | Node.js 18+, Express, node-cron |
 | Base de données | PostgreSQL 14+ |
-| Scraping | axios (7 sources) |
+| Scraping | axios (10 sources) |
 | Frontend | React 18, Vite, TypeScript strict |
 | Style | Tailwind CSS, CSS custom properties |
 | Polices | Syne (titres), DM Sans (corps) |
@@ -30,6 +30,8 @@ Pipeline : APIs publiques → normalisation → PostgreSQL → API REST → Dash
 | [The Muse](https://www.themuse.com/api/public/jobs) | US/Europe | Non |
 | [France Travail](https://francetravail.io/data/api/offres-emploi) | France | Oui (gratuite) |
 | [Adzuna](https://developer.adzuna.com) | Europe 8 pays | Oui (gratuite) |
+| [APEC](https://www.apec.fr) | France cadres | Non (API interne) |
+| [HelloWork](https://www.hellowork.com) | France | Non (API interne) |
 
 ---
 
@@ -199,6 +201,25 @@ CREATE TABLE jobs (
   url           TEXT UNIQUE  -- cle de deduplication
 );
 ```
+
+---
+
+## Ajout d'une nouvelle source (reverse engineering)
+
+Certaines sources (APEC, HelloWork, WTTJ) n'ont pas d'API publique. On les integre en capturant leurs appels internes depuis le navigateur :
+
+1. Ouvrir Chrome sur le site cible
+2. `F12` > onglet **Network** > filtre **Fetch/XHR**
+3. Cocher **Preserve log**, puis lancer une recherche sur le site
+4. Reperer la requete API (nom type `search`, `offres`, `query`...)
+5. Cliquer dessus :
+   - **Headers** : URL complete + methode HTTP + headers envoyes (Referer, cles, etc.)
+   - **Payload** : corps de la requete POST ou query params GET
+   - **Preview** : structure JSON de la reponse (noms des champs)
+6. Implementer une fonction `fetchNouvelleSource()` dans `backend/src/jobs/fetchJobs.js` avec les memes headers que le navigateur
+7. L'ajouter dans le tableau `SOURCES` en bas du fichier
+
+Voir `DOCUMENTATION.md` section 4 pour le detail complet avec exemples.
 
 ---
 
