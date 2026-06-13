@@ -239,14 +239,233 @@ async function fetchAdzuna() {
   return jobs;
 }
 
+const WTTJ_APP_ID = "CSEKHVMS53";
+const WTTJ_API_KEY = "4bd8f6215d0cc52b26430765769e65a0";
+const WTTJ_INDEX = "wk_cms_jobs_production";
+
+const WTTJ_HEADERS = {
+  "X-Algolia-Application-Id": WTTJ_APP_ID,
+  "X-Algolia-API-Key": WTTJ_API_KEY,
+  "Content-Type": "application/json",
+  "Referer": "https://www.welcometothejungle.com/",
+  "Origin": "https://www.welcometothejungle.com",
+};
+
+async function fetchWTTJPage(query, page) {
+  const { data } = await http.post(
+    `https://${WTTJ_APP_ID.toLowerCase()}-dsn.algolia.net/1/indexes/${WTTJ_INDEX}/query`,
+    { query, hitsPerPage: 50, page },
+    { headers: WTTJ_HEADERS }
+  );
+  return data.hits || [];
+}
+
+function mapWTTJHit(h) {
+  const city = h.offices?.[0]?.city || h.office?.city || "France";
+  const country = h.offices?.[0]?.country || "";
+  const location = country && country !== "France" ? `${city}, ${country}` : city;
+  const orgSlug = h.organization?.slug || "";
+  return {
+    title: h.name || "",
+    company: h.organization?.name || "Unknown",
+    location,
+    description: `${h.profile || ""}`.trim(),
+    date_posted: h.published_at || new Date().toISOString(),
+    source: "welcometothejungle",
+    contract_type: detectWTTJContract(h.contract_type),
+    url: `https://www.welcometothejungle.com/fr/companies/${orgSlug}/jobs/${h.slug}`,
+  };
+}
+
+const WTTJ_CONTRACT_MAP = {
+  APPRENTICESHIP: "alternance",
+  INTERNSHIP:     "internship",
+  CDI:            "cdi",
+  CDD:            "cdd",
+  FULL_TIME:      "cdi",
+  PART_TIME:      "cdd",
+  FREELANCE:      "freelance",
+  VIE:            "alternance",
+};
+
+function detectWTTJContract(ct) {
+  if (!ct) return null;
+  return WTTJ_CONTRACT_MAP[ct.toUpperCase()] || null;
+}
+
+async function fetchWelcomeToTheJungle() {
+  try {
+    const queries = ["developpeur", "developer", "ingenieur logiciel", "fullstack", "backend", "frontend"];
+    const seen = new Set();
+    const jobs = [];
+
+    for (const query of queries) {
+      const hits = await fetchWTTJPage(query, 0);
+      hits
+        .filter((h) => h.slug && !seen.has(h.slug))
+        .forEach((h) => {
+          seen.add(h.slug);
+          jobs.push(mapWTTJHit(h));
+        });
+    }
+
+    console.log(`[welcometothejungle] ${jobs.length} offres`);
+    return jobs;
+  } catch (err) {
+    console.error(`[welcometothejungle] echec:`, err.response?.status, err.message);
+    return [];
+  }
+}
+
+const APEC_CONTRACT_MAP = {
+  597138: "alternance",
+  101888: "cdi",
+  101889: "cdd",
+};
+
+function contractTypeFromAPEC(j) {
+  const titre = (j.intitule || "").toLowerCase();
+  if (titre.includes("alternance") || titre.includes("apprentissage")) return "alternance";
+  if (titre.includes("stage")) return "internship";
+  return APEC_CONTRACT_MAP[j.typeContrat] || "other";
+}
+
+async function fetchAPECPage(startIndex) {
+  const { data } = await http.post(
+    "https://www.apec.fr/cms/webservices/rechercheOffre",
+    {
+      lieux: [],
+      fonctions: [],
+      statutPoste: [],
+      typesContrat: [],
+      activeFiltre: true,
+      idNomZonesDeplacement: [],
+      idsEtablissement: [],
+      motsCles: "Developpeur",
+      niveauxExperience: [],
+      pagination: { range: 20, startIndex },
+      pointGeolocDeReference: { distance: 0 },
+      positionNumbersExcluded: [],
+      secteursActivite: [],
+      sorts: [{ type: "SCORE", direction: "DESCENDING" }],
+      typeClient: "CADRE",
+      typesConvention: [],
+      typesTeletravail: [],
+    },
+    {
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Referer": "https://www.apec.fr/candidat/recherche-emploi.html",
+        "Origin": "https://www.apec.fr",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      },
+    }
+  );
+  return (data.resultats || []).map((j) => {
+    const ville = (j.lieuTexte || "").split(" - ")[0] || "France";
+    return {
+      title: j.intitule,
+      company: j.nomCommercial || "Non communique",
+      location: `${ville}, France`,
+      description: j.texteOffre || "",
+      date_posted: j.datePublication || new Date().toISOString(),
+      source: "apec",
+      contract_type: contractTypeFromAPEC(j),
+      url: `https://www.apec.fr/candidat/recherche-emploi.html/emploi/detail-offre/${j.numeroOffre}`,
+    };
+  });
+}
+
+async function fetchAPEC() {
+  try {
+    const pages = await Promise.allSettled([
+      fetchAPECPage(0),
+      fetchAPECPage(20),
+      fetchAPECPage(40),
+      fetchAPECPage(60),
+      fetchAPECPage(80),
+    ]);
+    const jobs = [];
+    pages.forEach((p, i) => {
+      if (p.status === "fulfilled") jobs.push(...p.value);
+      else console.error(`[apec] page ${i} echec:`, p.reason?.response?.status);
+    });
+    console.log(`[apec] ${jobs.length} offres`);
+    return jobs;
+  } catch (err) {
+    console.error("[apec] erreur:", err.message);
+    return [];
+  }
+}
+
+async function fetchHelloWork() {
+  try {
+    const itemsSearchJson = JSON.stringify([
+      { Label: "CDI",        IsChecked: false, Value: "CDI"        },
+      { Label: "CDD",        IsChecked: false, Value: "CDD"        },
+      { Label: "Alternance", IsChecked: true,  Value: "Alternance" },
+      { Label: "Stage",      IsChecked: false, Value: "Stage"      },
+    ]);
+
+    const keywords = ["developpeur", "developer", "fullstack", "backend", "frontend"];
+    const seen = new Set();
+    const jobs = [];
+
+    for (const k of keywords) {
+      const { data } = await http.get(
+        "https://www.hellowork.com/fr-fr/emploi/getCandidateProfileSearch",
+        {
+          params: { k, l: "France", itemsSearchJson },
+          headers: {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Referer": "https://www.hellowork.com/fr-fr/emploi/recherche.html",
+            "Accept": "application/json, text/plain, */*",
+            "X-Requested-With": "XMLHttpRequest",
+          },
+        }
+      );
+
+      const items = data.results || data.jobs || data.data || data.Items || [];
+      items
+        .filter((j) => {
+          const url = j.Url || j.url || j.Link || "";
+          return url && !seen.has(url);
+        })
+        .forEach((j) => {
+          const url = j.Url || j.url || j.Link || "";
+          seen.add(url);
+          jobs.push({
+            title: j.Title || j.title || j.intitule || "",
+            company: j.Company || j.company || j.entreprise || "Unknown",
+            location: j.Location || j.location || j.lieu || "France",
+            description: j.Description || j.description || "",
+            date_posted: j.PublicationDate || j.datePosted || j.date || new Date().toISOString(),
+            source: "hellowork",
+            contract_type: "alternance",
+            url: url.startsWith("http") ? url : `https://www.hellowork.com${url}`,
+          });
+        });
+    }
+
+    console.log(`[hellowork] ${jobs.length} offres`);
+    return jobs;
+  } catch (err) {
+    console.error("[hellowork] erreur:", err.response?.status, err.message);
+    return [];
+  }
+}
+
 const SOURCES = [
-  { name: "remotive",      fn: fetchRemotive      },
-  { name: "arbeitnow",     fn: fetchArbeitnow     },
-  { name: "jobicy",        fn: fetchJobicy        },
-  { name: "remoteok",      fn: fetchRemoteOK      },
-  { name: "themuse",       fn: fetchTheMuse       },
-  { name: "francetravail", fn: fetchFranceTravail },
-  { name: "adzuna",        fn: fetchAdzuna        },
+  { name: "remotive",           fn: fetchRemotive           },
+  { name: "arbeitnow",          fn: fetchArbeitnow          },
+  { name: "jobicy",             fn: fetchJobicy             },
+  { name: "remoteok",           fn: fetchRemoteOK           },
+  { name: "themuse",            fn: fetchTheMuse            },
+  { name: "francetravail",      fn: fetchFranceTravail      },
+  { name: "adzuna",             fn: fetchAdzuna             },
+  { name: "welcometothejungle", fn: fetchWelcomeToTheJungle },
+  { name: "apec",               fn: fetchAPEC               },
 ];
 
 async function fetchAll() {
