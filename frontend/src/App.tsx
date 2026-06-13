@@ -42,6 +42,7 @@ export default function App() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [loading, setLoading] = useState(false);
   const [running, setRunning] = useState(false);
+  const [lastScrape, setLastScrape] = useState<{ inserted: number; skipped: number } | null>(null);
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
 
   const loadJobs = useCallback(async (f: Filters) => {
@@ -73,7 +74,8 @@ export default function App() {
     setRunning(true);
     try {
       const result = await runScraping();
-      showToast(`${result.inserted} offres ajoutees, ${result.skipped} ignorees`);
+      setLastScrape(result);
+      showToast(`${result.inserted} nouvelles offres ajoutees`);
       await loadJobs(filters);
       await loadSourceStats();
     } catch {
@@ -85,13 +87,6 @@ export default function App() {
 
   useEffect(() => { loadJobs(DEFAULT_FILTERS); }, [loadJobs]);
   useEffect(() => { loadSourceStats(); }, [loadSourceStats]);
-
-  const alternanceCount = jobs.filter((j) => j.contract_type === "alternance").length;
-  const frenchCount = jobs.filter((j) =>
-    j.source === "francetravail" ||
-    j.source === "labonnealternance" ||
-    /^(\d{2,3}\s*-|france)/i.test(j.location || "")
-  ).length;
 
   const visibleJobs = jobs.slice(0, visibleCount);
   const remaining = jobs.length - visibleCount;
@@ -121,11 +116,16 @@ export default function App() {
 
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-6">
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <MetricCard label="Total en base" value={jobs.length} accent />
-          <MetricCard label="Alternance" value={alternanceCount} />
-          <MetricCard label="En France" value={frenchCount} />
-          <MetricCard label="Sources" value={activeSources.length} />
+        <div className="grid grid-cols-2 gap-4">
+          <MetricCard
+            label="Resultats du dernier scraping"
+            value={lastScrape ? `+${lastScrape.inserted}` : "-"}
+            accent
+          />
+          <MetricCard
+            label="Sources actives"
+            value={activeSources.length || "-"}
+          />
         </div>
 
         <FiltersBar

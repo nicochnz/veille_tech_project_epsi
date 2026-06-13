@@ -15,14 +15,17 @@ const CONTRACT_STYLE: Record<string, { bg: string; color: string }> = {
 };
 
 const SOURCE_ACCENT: Record<string, string> = {
-  francetravail:     "#1c5d99",
-  labonnealternance: "#0f9d58",
-  remotive:          "#639fab",
-  arbeitnow:         "#8b5cf6",
-  remoteok:          "#f59e0b",
-  jobicy:            "#ec4899",
-  themuse:           "#14b8a6",
-  adzuna:            "#ff6b35",
+  francetravail:      "#1c5d99",
+  labonnealternance:  "#0f9d58",
+  remotive:           "#639fab",
+  arbeitnow:          "#8b5cf6",
+  remoteok:           "#f59e0b",
+  jobicy:             "#ec4899",
+  themuse:            "#14b8a6",
+  adzuna:             "#ff6b35",
+  welcometothejungle: "#ffcd00",
+  apec:               "#005691",
+  hellowork:          "#ff6b00",
 };
 
 export function JobList({ jobs, loading }: Props) {
