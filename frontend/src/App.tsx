@@ -5,29 +5,29 @@ import { fetchJobs, fetchSourceStats, runScraping } from "./api";
 import type { SourceStat } from "./api";
 import type { Job, Filters } from "./types";
 
-const DEFAULT_FILTERS: Filters = { tech: "", contract: "", location: "" };
+const DEFAULT_FILTERS: Filters = { tech: [], contract: "", location: "" };
 const PAGE_SIZE = 50;
 const EPSI_LOGO = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTS5VYolg4PlHUkQ7wMn4lTENI-rS9XfFDTOg&s";
 
 function MetricCard({ label, value, accent = false }: { label: string; value: string | number; accent?: boolean }) {
   return (
     <div
-      className="rounded-2xl px-5 py-4 flex flex-col gap-1 transition-all hover:shadow-md"
+      className="rounded-2xl px-5 py-4 flex flex-col gap-1"
       style={{
-        background: accent ? "var(--c-primary)" : "#fff",
+        background: accent ? "var(--c-dark)" : "#fff",
         border: accent ? "none" : "1px solid var(--c-light)",
-        boxShadow: accent ? "0 4px 20px rgba(28,93,153,0.25)" : undefined,
+        boxShadow: accent ? "0 4px 20px rgba(39,40,56,0.2)" : undefined,
       }}
     >
       <span
         className="text-xs font-semibold uppercase tracking-widest"
-        style={{ color: accent ? "rgba(255,255,255,0.7)" : "var(--c-secondary)" }}
+        style={{ color: accent ? "rgba(243,222,138,0.6)" : "var(--c-secondary)" }}
       >
         {label}
       </span>
       <span
         className="font-display text-3xl font-bold leading-none"
-        style={{ color: accent ? "#fff" : "var(--c-dark)" }}
+        style={{ color: accent ? "var(--c-accent)" : "var(--c-dark)" }}
       >
         {value}
       </span>
@@ -50,7 +50,7 @@ export default function App() {
     setVisibleCount(PAGE_SIZE);
     try {
       setJobs(await fetchJobs({
-        tech: f.tech || undefined,
+        tech: f.tech,
         contract: f.contract || undefined,
         location: f.location || undefined,
       }));
@@ -95,7 +95,7 @@ export default function App() {
   return (
     <div className="min-h-screen" style={{ background: "var(--c-bg)" }}>
 
-      <header style={{ background: "var(--c-primary)" }} className="shadow-lg">
+      <header style={{ background: "var(--c-dark)" }} className="shadow-lg">
         <div className="max-w-7xl mx-auto px-6 py-5 flex items-center gap-5">
           <div
             className="rounded-xl overflow-hidden flex-shrink-0"
@@ -107,7 +107,7 @@ export default function App() {
             <h1 className="font-display text-2xl font-bold text-white leading-none tracking-tight">
               Epscrap
             </h1>
-            <p className="text-sm mt-0.5" style={{ color: "rgba(187,205,229,0.85)" }}>
+            <p className="text-sm mt-0.5" style={{ color: "rgba(249,248,248,0.5)" }}>
               Veille emploi dev Europe
             </p>
           </div>

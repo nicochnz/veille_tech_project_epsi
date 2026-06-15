@@ -22,9 +22,10 @@ async function getJobs({ tech, location, contract, source, limit = 500, offset =
   const conditions = [];
   const params = [];
 
-  if (tech) {
-    params.push(tech);
-    conditions.push(`$${params.length} = ANY(tech_stack)`);
+  const techs = Array.isArray(tech) ? tech.filter(Boolean) : (tech ? [tech] : []);
+  if (techs.length > 0) {
+    params.push(techs);
+    conditions.push(`tech_stack && $${params.length}::text[]`);
   }
   if (location) {
     params.push(`%${location}%`);
@@ -57,7 +58,8 @@ async function countJobs({ tech, location, contract, source }) {
   const conditions = [];
   const params = [];
 
-  if (tech) { params.push(tech); conditions.push(`$${params.length} = ANY(tech_stack)`); }
+  const techs = Array.isArray(tech) ? tech.filter(Boolean) : (tech ? [tech] : []);
+  if (techs.length > 0) { params.push(techs); conditions.push(`tech_stack && $${params.length}::text[]`); }
   if (location) { params.push(`%${location}%`); conditions.push(`location ILIKE $${params.length}`); }
   if (contract) { params.push(contract); conditions.push(`contract_type = $${params.length}`); }
   if (source) { params.push(source); conditions.push(`source = $${params.length}`); }

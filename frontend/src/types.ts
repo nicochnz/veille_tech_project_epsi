@@ -16,7 +16,7 @@ export interface TechStat {
 }
 
 export interface Filters {
-  tech: string;
+  tech: string[];
   contract: string;
   location: string;
 }

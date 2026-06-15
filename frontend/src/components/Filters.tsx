@@ -9,11 +9,18 @@ interface Props {
 }
 
 export function Filters({ filters, onChange, onRun, running }: Props) {
-  function set(key: keyof Filters, value: string) {
+  function set<K extends keyof Filters>(key: K, value: Filters[K]) {
     onChange({ ...filters, [key]: value });
   }
 
-  const hasAny = filters.tech || filters.contract || filters.location;
+  function toggleTech(tech: string) {
+    const next = filters.tech.includes(tech)
+      ? filters.tech.filter((t) => t !== tech)
+      : [...filters.tech, tech];
+    set("tech", next);
+  }
+
+  const hasAny = filters.tech.length > 0 || !!filters.contract || !!filters.location;
 
   const inputBase: React.CSSProperties = {
     borderColor: "var(--c-light)",
@@ -25,27 +32,35 @@ export function Filters({ filters, onChange, onRun, running }: Props) {
   return (
     <div
       className="rounded-2xl p-5"
-      style={{ background: "#fff", border: "1px solid var(--c-light)", boxShadow: "0 2px 8px rgba(28,93,153,0.05)" }}
+      style={{ background: "#fff", border: "1px solid var(--c-light)", boxShadow: "0 2px 8px rgba(39,40,56,0.05)" }}
     >
+      <div className="mb-4 pb-4" style={{ borderBottom: "1px dashed var(--c-light)" }}>
+        <label className="block text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--c-secondary)" }}>
+          Technologie
+        </label>
+        <div className="flex flex-wrap gap-1.5">
+          {TECHS.map((t) => {
+            const active = filters.tech.includes(t);
+            return (
+              <button
+                key={t}
+                onClick={() => toggleTech(t)}
+                className="text-xs px-2.5 py-1 rounded-full font-semibold transition-colors"
+                style={{
+                  background: active ? "var(--c-primary)" : "var(--c-bg)",
+                  color: active ? "#fff" : "var(--c-secondary)",
+                  border: `1px solid ${active ? "var(--c-primary)" : "var(--c-light)"}`,
+                }}
+              >
+                {t}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="flex flex-wrap gap-4 items-end">
 
-        {/* Technologie */}
-        <div className="flex flex-col gap-1.5 min-w-[155px]">
-          <label className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--c-secondary)" }}>
-            Technologie
-          </label>
-          <select
-            value={filters.tech}
-            onChange={(e) => set("tech", e.target.value)}
-            style={inputBase}
-            className="border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1c5d99]"
-          >
-            <option value="">Toutes</option>
-            {TECHS.map(t => <option key={t} value={t}>{t}</option>)}
-          </select>
-        </div>
-
-        {/* Contrat */}
         <div className="flex flex-col gap-1.5 min-w-[155px]">
           <label className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--c-secondary)" }}>
             Contrat
@@ -54,14 +69,13 @@ export function Filters({ filters, onChange, onRun, running }: Props) {
             value={filters.contract}
             onChange={(e) => set("contract", e.target.value)}
             style={inputBase}
-            className="border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1c5d99]"
+            className="border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#eb9486]"
           >
             <option value="">Tous</option>
             {CONTRACT_TYPES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
           </select>
         </div>
 
-        {/* Localisation */}
         <div className="flex flex-col gap-1.5 min-w-[195px]">
           <label className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--c-secondary)" }}>
             Localisation
@@ -73,15 +87,14 @@ export function Filters({ filters, onChange, onRun, running }: Props) {
             onKeyDown={(e) => e.key === "Enter" && onRun()}
             placeholder="Paris, Lyon, France..."
             style={inputBase}
-            className="border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1c5d99] placeholder:text-gray-300"
+            className="border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#eb9486] placeholder:text-gray-300"
           />
         </div>
 
-        {/* Reset */}
         {hasAny && (
           <button
-            onClick={() => onChange({ tech: "", contract: "", location: "" })}
-            className="text-xs font-semibold px-4 py-2.5 rounded-xl transition-colors hover:bg-gray-50"
+            onClick={() => onChange({ tech: [], contract: "", location: "" })}
+            className="text-xs font-semibold px-4 py-2.5 rounded-xl"
             style={{ color: "var(--c-secondary)", border: "1px solid var(--c-light)" }}
           >
             Effacer
@@ -92,8 +105,8 @@ export function Filters({ filters, onChange, onRun, running }: Props) {
           <button
             onClick={onRun}
             disabled={running}
-            className="flex items-center gap-2.5 px-6 py-2.5 rounded-xl font-bold text-sm text-white shadow-md hover:shadow-lg transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-            style={{ background: running ? "var(--c-secondary)" : "var(--c-primary)" }}
+            className="flex items-center gap-2.5 px-6 py-2.5 rounded-xl font-bold text-sm text-white shadow-md hover:shadow-lg transition-shadow disabled:opacity-60 disabled:cursor-not-allowed"
+            style={{ background: running ? "var(--c-secondary)" : "var(--c-dark)" }}
           >
             {running ? (
               <>
@@ -113,11 +126,10 @@ export function Filters({ filters, onChange, onRun, running }: Props) {
         </div>
       </div>
 
-      {/* Tags filtres actifs */}
-      {(filters.tech || filters.contract || filters.location) && (
+      {hasAny && (
         <div className="flex flex-wrap items-center gap-2 mt-3 pt-3" style={{ borderTop: "1px dashed var(--c-light)" }}>
           <span className="text-xs" style={{ color: "var(--c-secondary)" }}>Actifs :</span>
-          {filters.tech && <Chip label={filters.tech} />}
+          {filters.tech.map((t) => <Chip key={t} label={t} />)}
           {filters.contract && <Chip label={filters.contract} />}
           {filters.location && <Chip label={filters.location} />}
         </div>
@@ -130,7 +142,7 @@ function Chip({ label }: { label: string }) {
   return (
     <span
       className="font-display text-xs px-3 py-0.5 rounded-full font-semibold"
-      style={{ background: "#e8f0f8", color: "var(--c-primary)" }}
+      style={{ background: "rgba(235,148,134,0.12)", color: "var(--c-primary)", border: "1px solid rgba(235,148,134,0.3)" }}
     >
       {label}
     </span>

@@ -5,11 +5,12 @@
 :root {
   --font-display: 'Syne', 'Arial Black', sans-serif;
   --font-body: 'DM Sans', system-ui, sans-serif;
-  --c-dark: #222222;
-  --c-primary: #1c5d99;
-  --c-secondary: #639fab;
-  --c-light: #bbcde5;
-  --c-bg: #f0f5f9;
+  --c-dark: #272838;
+  --c-primary: #eb9486;
+  --c-accent: #f3de8a;
+  --c-secondary: #7e7f9a;
+  --c-light: #c8c9d7;
+  --c-bg: #f9f8f8;
 }
 
 body {

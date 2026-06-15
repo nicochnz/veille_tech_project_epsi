@@ -6,12 +6,12 @@ interface Props {
 }
 
 const CONTRACT_STYLE: Record<string, { bg: string; color: string }> = {
-  alternance: { bg: "#1c5d99",  color: "#fff" },
-  cdi:        { bg: "#222222",  color: "#fff" },
-  cdd:        { bg: "#639fab",  color: "#fff" },
-  freelance:  { bg: "#bbcde5",  color: "#1c5d99" },
-  internship: { bg: "#e8f0f8",  color: "#1c5d99" },
-  other:      { bg: "#f0f0f0",  color: "#888" },
+  alternance: { bg: "#f3de8a",  color: "#272838" },
+  cdi:        { bg: "#272838",  color: "#f9f8f8" },
+  cdd:        { bg: "#7e7f9a",  color: "#f9f8f8" },
+  freelance:  { bg: "#eb9486",  color: "#f9f8f8" },
+  internship: { bg: "#f0eef7",  color: "#7e7f9a" },
+  other:      { bg: "#efefef",  color: "#9a9a9a" },
 };
 
 const SOURCE_ACCENT: Record<string, string> = {
@@ -73,7 +73,7 @@ export function JobList({ jobs, loading }: Props) {
   return (
     <div
       className="rounded-2xl overflow-hidden"
-      style={{ border: "1px solid var(--c-light)", boxShadow: "0 2px 12px rgba(28,93,153,0.06)" }}
+      style={{ border: "1px solid var(--c-light)", boxShadow: "0 2px 12px rgba(39,40,56,0.06)" }}
     >
       <div
         className="hidden md:grid items-center px-5 py-3 text-xs font-semibold uppercase tracking-widest"
